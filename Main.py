@@ -3,7 +3,7 @@ import sys
 import glob
 import time
 
-BLUETOOTH_NAME = "Test"
+BLUETOOTH_NAME = "COM7"
 DATA_RATE = 100
 SIGN_LENGTH = 3
 SAMPLE_LENGTH = 20
@@ -13,8 +13,8 @@ def main():
     # Open the right COM port
     com = None
     results = serial_ports()
-    for port, name in results:
-        if name == BLUETOOTH_NAME:
+    for port in results:
+        if port == BLUETOOTH_NAME:
             com = serial.Serial(port)
     if com is None:
         print 'No bluetooth found'
@@ -26,16 +26,20 @@ def main():
     log = open(filename, 'w')
     flag = True
     dataBuf = []
+    cnt = 0
     while flag:
         if com.in_waiting > 0:
             temp = com.read_until()
+            cnt += 1
+            log.write(temp)
             temp = temp.split(',')
             dataBuf.append(temp)
             if dataBuf.__sizeof__() > DATA_RATE * SIGN_LENGTH:
                 dataBuf = dataBuf[1:]
+            if cnt > 999 :
+                flag = False
+            #movement(dataBuf)
 
-            movement(dataBuf)
-            log.write(temp)
 
     # Close everything we opened
     com.close()
@@ -65,9 +69,8 @@ def serial_ports():
     for port in ports:
         try:
             s = serial.Serial(port)
-            name = s.name
             s.close()
-            result.append((port, name))
+            result.append(port)
         except (OSError, serial.SerialException):
             pass
     return result
