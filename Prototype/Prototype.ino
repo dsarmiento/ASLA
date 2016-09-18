@@ -8,7 +8,7 @@ bool testing = false;
 
 void setup()
 {
-    Serial.begin(9600);
+    Serial.begin(57600);
     delay(1000);
     if(SensorOne.begin() != 0)
     {
@@ -22,9 +22,11 @@ void setup()
 
 void loop()
 {
-    String data = "";
-    long start = millis();
     
+    long start = millis();
+    int cnt = 0;
+    while(start + 1000 > millis()){
+      String data = "";
     data += String(analogRead(0)); data += ",";
     data += String(analogRead(1)); data += ",";
     data += String(analogRead(2)); data += ",";
@@ -51,6 +53,11 @@ void loop()
     else
     {
         Serial.println(data);
+        cnt++;
     }
-
+    }
+    Serial.println(cnt);
+    while(true);
 }
+
+
