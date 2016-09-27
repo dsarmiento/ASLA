@@ -3,25 +3,26 @@ import sys
 import glob
 import time
 from threading import Thread
+from threading import Lock
 from sklearn import svm
+
 
 BLUETOOTH_NAME = "COM8"
 capture = False
 flag = True
 learning = True
 
-lock = False
+lock = Lock()
 
-def main():
+def main(arg):
     global capture
     global flag
-    global Learning
+    global learning
 
     com = connect()
     clf = svm.SVC()
     X = []
     y = []
-
 
     while flag:
         if learning:
@@ -29,13 +30,21 @@ def main():
             if com.in_waiting > 0:
                 data = com.read_until()
                 if capture:
-                    data = data[:-2]
-                    data = data.split(',')
-                    capture = False
-                    X.append(data)
-                    print data
-                    number = raw_input("Number: ")
-                    y.append(number)
+                    lock.acquire()
+                    try:
+                        capture = False
+
+                        data = data[:-2]
+                        data = data.split(',')
+                        number = raw_input("Number: ")
+
+                        print data
+                        print number
+
+                        X.append(data)
+                        y.append(number)
+                    finally:
+                        lock.release()
 
         else:
             if not X == None:
@@ -47,10 +56,11 @@ def main():
             if com.in_waiting > 0:
                 data = com.read_until()
                 data = data[:-2]
-                data.split(',')
+                data = data.split(',')
                 if capture:
                     capture = False
                     print clf.predict(data)
+    com.close()
 
 
 # List all connected serial ports and names
@@ -92,18 +102,25 @@ def capture_thread(arg):
     global learning
 
     while flag:
-        input = raw_input("Cmd: ")
-        if input == 'c':
-            capture = True
-        if input == 's':
-            learning = False
-        if input == 'q':
-            flag = False
-        while capture:
-            cnt = 0
+        lock.acquire()
+        try:
+            input = raw_input("Cmd: ")
+            if input == 'c':
+                capture = True
+            if input == 's':
+                learning = False
+            if input == 'q':
+                flag = False
+        finally:
+            lock.release()
+            time.sleep(2)
+
+
 
 if __name__ == '__main__':
     flag = True
     capture_thread = Thread(target = capture_thread, args = (None, ))
+    main_thread = Thread(target = main, args = (None, ))
     capture_thread.start()
-    main()
+    main_thread.start()
+    main_thread.join()
