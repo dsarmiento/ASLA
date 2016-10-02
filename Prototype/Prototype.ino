@@ -22,14 +22,13 @@ void setup()
 
 void loop()
 {
-  
-  long start = millis();
-  int cnt = 0;
+  int start = millis();
   String data = "";
   data += String(analogRead(0)); data += ",";
   data += String(analogRead(1)); data += ",";
   data += String(analogRead(2)); data += ",";
   data += String(analogRead(3)); data += ",";
+  data += String(analogRead(6)); data += ",";
   data += String(SensorOne.readFloatAccelX()); data += ",";
   data += String(SensorOne.readFloatAccelY()); data += ",";
   data += String(SensorOne.readFloatAccelZ()); data += ",";
@@ -42,8 +41,8 @@ void loop()
   data += String(SensorTwo.readFloatGyroX()); data += ",";
   data += String(SensorTwo.readFloatGyroY()); data += ",";
   data += String(SensorTwo.readFloatGyroZ()); 
-  
-  long end = millis();
+  int end = millis();  
+
   if(Serial.available() > 0)
   {
     char in = Serial.read();
