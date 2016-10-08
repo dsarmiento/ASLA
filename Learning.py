@@ -7,17 +7,12 @@ from threading import Lock
 from sklearn import svm
 
 
-BLUETOOTH_NAME = "COM8"
-capture = False
+BLUETOOTH_NAME = "COM4"
 flag = True
-learning = True
 
-lock = Lock()
 
-def main(arg):
-    global capture
+def main():
     global flag
-    global learning
 
     com = connect()
     clf = svm.SVC()
@@ -25,43 +20,59 @@ def main(arg):
     y = []
 
     while flag:
-        if learning:
+        print "1. Translate"
+        print "2. Learn"
+        print "3. Quit"
+        choice = raw_input("Choose an option: ")
+        print
+
+        if choice == '1':
+            com.flushOutput()
+            com.flushInput()
             com.write('y')
-            if com.in_waiting > 0:
-                data = com.read_until()
-                if capture:
-                    lock.acquire()
-                    try:
-                        capture = False
+            time.sleep(.2)
+            temp = com.read_until()
+            temp = temp[:-2]
+            temp = temp.split(',')
+            data = []
+            for item in temp:
+                data.append(float(item))
+            print data
+            print clf.predict(data)
 
-                        data = data[:-2]
-                        data = data.split(',')
-                        number = raw_input("Number: ")
+        if choice == '2':
+            for i in range(4):
+                if i == 0:
+                    result = 'A'
+                if i == 1:
+                    result = 'B'
+                if i == 2:
+                    result = 'C'
+                if i == 3:
+                    result = 'D'
+                print "Learning ", result
+                raw_input("Ready?")
+                for j in range(5):
+                    com.flushOutput()
+                    com.flushInput()
+                    com.write('y')
+                    time.sleep(.2)
+                    temp = com.read_until()
+                    temp = temp[:-2]
+                    temp = temp.split(',')
+                    data = []
+                    for item in temp:
+                        data.append(float(item))
+                    X.append(data)
+                    y.append(result)
 
-                        print data
-                        print number
+            print y
+            clf.fit(X, y)
+        if choice == '3':
+            flag = False
+            com.close()
 
-                        X.append(data)
-                        y.append(number)
-                    finally:
-                        lock.release()
-
-        else:
-            if not X == None:
-                print y
-                clf.fit(X, y)
-                X = None
-
-            com.write('y')
-            if com.in_waiting > 0:
-                data = com.read_until()
-                data = data[:-2]
-                data = data.split(',')
-                if capture:
-                    capture = False
-                    print clf.predict(data)
-    com.close()
-
+    return
 
 # List all connected serial ports and names
 def serial_ports():
@@ -96,31 +107,7 @@ def connect():
         print 'No bluetooth found'
         return 0
 
-def capture_thread(arg):
-    global capture
-    global flag
-    global learning
-
-    while flag:
-        lock.acquire()
-        try:
-            input = raw_input("Cmd: ")
-            if input == 'c':
-                capture = True
-            if input == 's':
-                learning = False
-            if input == 'q':
-                flag = False
-        finally:
-            lock.release()
-            time.sleep(2)
-
-
 
 if __name__ == '__main__':
     flag = True
-    capture_thread = Thread(target = capture_thread, args = (None, ))
-    main_thread = Thread(target = main, args = (None, ))
-    capture_thread.start()
-    main_thread.start()
-    main_thread.join()
+    main()
