@@ -2,9 +2,8 @@ import serial
 import sys
 import glob
 import time
-from threading import Thread
-from threading import Lock
 from sklearn import svm
+import numpy as np
 
 
 BLUETOOTH_NAME = "COM4"
@@ -13,9 +12,10 @@ flag = True
 
 def main():
     global flag
+    fileIn = open("Test.txt", 'r')
 
     com = connect()
-    clf = svm.SVC()
+    clf = svm.NuSVC(kernel='poly', degree=5)
     X = []
     y = []
 
@@ -37,7 +37,10 @@ def main():
             data = []
             for item in temp:
                 data.append(float(item))
+            data = data[:5]
             print data
+            data = np.array(data)
+            data = data.reshape(1, -1)
             print clf.predict(data)
 
         if choice == '2':
@@ -53,20 +56,19 @@ def main():
                 print "Learning ", result
                 raw_input("Ready?")
                 for j in range(5):
-                    com.flushOutput()
-                    com.flushInput()
-                    com.write('y')
-                    time.sleep(.2)
-                    temp = com.read_until()
-                    temp = temp[:-2]
+                    temp = fileIn.readline()
+                    temp = temp[:-1]
                     temp = temp.split(',')
                     data = []
                     for item in temp:
                         data.append(float(item))
+                    print data
                     X.append(data)
                     y.append(result)
 
             print y
+            X = np.array(X)
+            y = np.array(y)
             clf.fit(X, y)
         if choice == '3':
             flag = False

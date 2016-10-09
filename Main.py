@@ -3,24 +3,21 @@ import sys
 import glob
 import time
 from sklearn import svm
-from threading import Thread
-from threading import Lock
+import numpy as np
 
 
 BLUETOOTH_NAME = "COM4"
-lock = Lock()
+flag = True
+
 
 def main():
-    clf = svm.SVC()
-    global com
+    global flag
+    file = open("Test.txt", 'r')
 
     com = connect()
-    flag = True
+    clf = svm.NuSVC(kernel='poly', degree=5)
     X = []
     y = []
-
-    if com == 0:
-        return
 
     while flag:
         print "1. Translate"
@@ -29,45 +26,61 @@ def main():
         choice = raw_input("Choose an option: ")
         print
 
-        LOG = False
         if choice == '1':
-            while choice != 'n':
-                com.flushOutput()
-                com.flushInput()
-                com.write('y')
-                time.sleep(.2)
-                if com.in_waiting > 0:
-                    data = com.read_until()
-                    data = data[:-2]
-                    data = data.split(',')
-                    data = data[:5]
-                    print data
-                    responce = clf.predict(data)
-                    print responce
-                    choice = raw_input("Continue? y/n")
+            com.flushOutput()
+            com.flushInput()
+            com.write('y')
+            time.sleep(.2)
+            temp = com.read_until()
+            temp = temp[:-2]
+            temp = temp.split(',')
+            data = []
+            for item in temp:
+                data.append(float(item))
+            data = data[:5]
+            print data
+            data = np.array(data)
+            data = data.reshape(1, -1)
+            print clf.predict(data)
+
         if choice == '2':
-            while choice != 'qq':
-                com.flushOutput()
-                com.flushInput()
-                com.write('y')
-                time.sleep(.2)
-                if com.in_waiting > 0:
-                    data = com.read_until()
-                    data = data[:-2]
-                    data = data.split(',')
+            for i in range(4):
+                if i == 0:
+                    result = 'A'
+                if i == 1:
+                    result = 'B'
+                if i == 2:
+                    result = 'C'
+                if i == 3:
+                    result = 'D'
+                print "Learning ", result
+                raw_input("Ready?")
+                for j in range(5):
+                    com.flushOutput()
+                    com.flushInput()
+                    com.write('y')
+                    time.sleep(.2)
+                    temp = com.read_until()
+                    temp = temp[:-2]
+                    temp = temp.split(',')
+                    data = []
+
+                    for item in temp:
+                        data.append(float(item))
                     data = data[:5]
                     print data
-                    choice = raw_input("Letter?")
-                    print choice
-                    if choice != 'qq':
-                        X.append(data)
-                        y.append(choice)
+                    X.append(data)
+                    y.append(result)
+
             print y
+            X = np.array(X)
+            y = np.array(y)
             clf.fit(X, y)
         if choice == '3':
             flag = False
             com.close()
 
+    return
 
 # List all connected serial ports and names
 def serial_ports():
@@ -99,7 +112,7 @@ def connect():
             com = serial.Serial(port, 115200)
             return com
     if com is None:
-        print 'No glove found'
+        print 'No bluetooth found'
         return 0
 
 
