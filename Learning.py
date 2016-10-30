@@ -6,13 +6,15 @@ from sklearn import svm
 import numpy as np
 
 
-BLUETOOTH_NAME = "COM4"
+BLUETOOTH_NAME = "COM7"
 flag = True
 
+letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
+           'I', 'K', 'M', 'N', 'O', 'R', 'S', 'T',
+           'U', 'V', 'W', 'X', 'Y']
 
 def main():
     global flag
-    fileIn = open("Test.txt", 'r')
 
     com = connect()
     clf = svm.NuSVC(kernel='poly', degree=5)
@@ -37,27 +39,22 @@ def main():
             data = []
             for item in temp:
                 data.append(float(item))
-            data = data[:5]
             print data
             data = np.array(data)
             data = data.reshape(1, -1)
             print clf.predict(data)
 
         if choice == '2':
-            for i in range(4):
-                if i == 0:
-                    result = 'A'
-                if i == 1:
-                    result = 'B'
-                if i == 2:
-                    result = 'C'
-                if i == 3:
-                    result = 'D'
+            for result in letters:
                 print "Learning ", result
                 raw_input("Ready?")
                 for j in range(5):
-                    temp = fileIn.readline()
-                    temp = temp[:-1]
+                    com.flushOutput()
+                    com.flushInput()
+                    com.write('y')
+                    time.sleep(.2)
+                    temp = com.read_until()
+                    temp = temp[:-2]
                     temp = temp.split(',')
                     data = []
                     for item in temp:
@@ -65,8 +62,8 @@ def main():
                     print data
                     X.append(data)
                     y.append(result)
+                    time.sleep(.2)
 
-            print y
             X = np.array(X)
             y = np.array(y)
             clf.fit(X, y)
