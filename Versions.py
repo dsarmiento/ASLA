@@ -8,3 +8,5 @@ import sklearn
 print "SkLearn Version: ", sklearn.__version__
 import serial
 print "Serial Version: ", serial.VERSION
+import pyttsx
+print "TTS Version: ", pyttsx.VERSION

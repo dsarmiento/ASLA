@@ -6,12 +6,8 @@ from sklearn import svm
 import numpy as np
 
 
-BLUETOOTH_NAME = "COM7"
+BLUETOOTH_NAME = "COM4"
 flag = True
-
-letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
-           'I', 'K', 'M', 'N', 'O', 'R', 'S', 'T',
-           'U', 'V', 'W', 'X', 'Y']
 
 def main():
     global flag
@@ -22,30 +18,14 @@ def main():
     y = []
 
     while flag:
-        print "1. Translate"
-        print "2. Learn"
+        print "1. Learn"
+        print "2. Translate"
         print "3. Quit"
         choice = raw_input("Choose an option: ")
         print
-
         if choice == '1':
-            com.flushOutput()
-            com.flushInput()
-            com.write('y')
-            time.sleep(.2)
-            temp = com.read_until()
-            temp = temp[:-2]
-            temp = temp.split(',')
-            data = []
-            for item in temp:
-                data.append(float(item))
-            print data
-            data = np.array(data)
-            data = data.reshape(1, -1)
-            print clf.predict(data)
-
-        if choice == '2':
-            for result in letters:
+            for result in range(26):
+                result = chr(ord('A') + result)
                 print "Learning ", result
                 raw_input("Ready?")
                 for j in range(5):
@@ -67,7 +47,22 @@ def main():
             X = np.array(X)
             y = np.array(y)
             clf.fit(X, y)
-        if choice == '3':
+        elif choice == '2':
+            com.flushOutput()
+            com.flushInput()
+            com.write('y')
+            time.sleep(.2)
+            temp = com.read_until()
+            temp = temp[:-2]
+            temp = temp.split(',')
+            data = []
+            for item in temp:
+                data.append(float(item))
+            print data
+            data = np.array(data)
+            data = data.reshape(1, -1)
+            print clf.predict(data)
+        elif choice == '3':
             flag = False
             com.close()
 
