@@ -2,6 +2,8 @@ import serial
 import sys
 import glob
 import time
+import os.path
+import pickle
 from sklearn import svm
 import numpy as np
 
@@ -13,7 +15,7 @@ def main():
     global flag
 
     com = connect()
-    clf = svm.NuSVC(kernel='poly', degree=3)
+    clf = svm.NuSVC(kernel = 'poly', degree = 3)
     X = []
     y = []
 
@@ -24,44 +26,61 @@ def main():
         choice = raw_input("Choose an option: ")
         print
         if choice == '1':
-            for result in range(26):
-                result = chr(ord('A') + result)
-                print "Learning ", result
-                raw_input("Ready?")
-                for j in range(5):
-                    com.flushOutput()
-                    com.flushInput()
-                    com.write('y')
-                    time.sleep(.2)
-                    temp = com.read_until()
-                    temp = temp[:-2]
-                    temp = temp.split(',')
-                    data = []
-                    for item in temp:
-                        data.append(float(item))
-                    print data
-                    X.append(data)
-                    y.append(result)
-                    time.sleep(.2)
+            filename = "letters.sav"
+            if os.path.exists(filename):
+                print "A previously saved library was found,",
+                print "would you like to use it? Y/N"
+                useFile = raw_input()
+            else:
+                useFile = 'N'
+            if useFile == 'N' or useFile == 'n':
+                for result in range(26):
+                    result = chr(ord('A') + result)
+                    print "Learning ", result
+                    raw_input("Ready?")
+                    for j in range(5):
+                        com.flushOutput()
+                        com.flushInput()
+                        com.write('y')
+                        time.sleep(.2)
+                        temp = com.read_until()
+                        temp = temp[:-2]
+                        temp = temp.split(',')
+                        data = []
+                        for item in temp:
+                            data.append(float(item))
+                        print data
+                        X.append(data)
+                        y.append(result)
+                        time.sleep(.2)
 
-            X = np.array(X)
-            y = np.array(y)
-            clf.fit(X, y)
+                X = np.array(X)
+                y = np.array(y)
+                clf.fit(X, y)
+                pickle.dump(clf, open(filename, 'wb'))
+            elif useFile == 'Y' or useFile == 'y':
+                clf = pickle.load(open(filename, 'rb'))
+
         elif choice == '2':
-            com.flushOutput()
-            com.flushInput()
-            com.write('y')
-            time.sleep(.2)
-            temp = com.read_until()
-            temp = temp[:-2]
-            temp = temp.split(',')
-            data = []
-            for item in temp:
-                data.append(float(item))
-            print data
-            data = np.array(data)
-            data = data.reshape(1, -1)
-            print clf.predict(data)
+            print "Press enter to translate"
+            print "Q to quit"
+            translate = raw_input()
+            while translate != 'Q' or translate != 'q':
+                com.flushOutput()
+                com.flushInput()
+                com.write('y')
+                time.sleep(.2)
+                temp = com.read_until()
+                temp = temp[:-2]
+                temp = temp.split(',')
+                data = []
+                for item in temp:
+                    data.append(float(item))
+                print data
+                data = np.array(data)
+                data = data.reshape(1, -1)
+                print clf.predict(data)
+                translate = raw_input()
         elif choice == '3':
             flag = False
             com.close()
