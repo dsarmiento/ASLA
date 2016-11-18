@@ -13,7 +13,7 @@ def main():
     global flag
 
     com = connect()
-    clf = svm.NuSVC(kernel='poly', degree=5)
+    clf = svm.NuSVC(kernel='poly', degree=3)
     X = []
     y = []
 
