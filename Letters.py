@@ -15,7 +15,8 @@ def main():
     global flag
 
     com = connect()
-    clf = svm.NuSVC(kernel = 'poly', degree = 3)
+    clf = svm.NuSVC(kernel = 'poly', degree = 5)
+    dataFileName = "letters.csv"
     X = []
     y = []
 
@@ -34,6 +35,7 @@ def main():
             else:
                 useFile = 'N'
             if useFile == 'N' or useFile == 'n':
+                trainingData = open(dataFileName, 'w')
                 for result in range(26):
                     result = chr(ord('A') + result)
                     print "Learning ", result
@@ -43,29 +45,96 @@ def main():
                         com.flushInput()
                         com.write('y')
                         time.sleep(.2)
+
                         temp = com.read_until()
                         temp = temp[:-2]
+
+                        trainingData.write(temp)
+                        trainingData.write(',')
+                        trainingData.write(result)
+                        trainingData.write('\n')
+
                         temp = temp.split(',')
                         data = []
+
                         for item in temp:
                             data.append(float(item))
                         print data
+
                         X.append(data)
                         y.append(result)
                         time.sleep(.2)
 
+                trainingData.close()
                 X = np.array(X)
                 y = np.array(y)
                 clf.fit(X, y)
                 pickle.dump(clf, open(filename, 'wb'))
+
             elif useFile == 'Y' or useFile == 'y':
-                clf = pickle.load(open(filename, 'rb'))
+                addLib = raw_input("Would you like to add to the library? (Y/N)")
+                if addLib == 'Y' or addLib == 'y':
+                    trainingData = open(dataFileName, 'r+')
+                    stillReading = True
+                    while stillReading:
+                        temp = trainingData.readline()
+                        if temp != "":
+                            temp = temp.split(',')
+                            result = temp.remove(temp.__len__() - 1)
+                            data = []
+
+                            for item in temp:
+                                data.append(float(item))
+                            X.append(data)
+                            y.append(result)
+
+                            raw_input("Ready? Type 'Qq' as an input to quit.")
+                            result = 'Qq'
+                            while result != 'Qq':
+                                result = raw_input("Input?")
+                                if result != 'Qq':
+                                    for j in range(5):
+                                        com.flushOutput()
+                                        com.flushInput()
+                                        com.write('y')
+                                        time.sleep(.2)
+
+                                        temp = com.read_until()
+                                        temp = temp[:-2]
+
+                                        trainingData.write(temp)
+                                        trainingData.write(',')
+                                        trainingData.write(result)
+                                        trainingData.write('\n')
+
+                                        temp = temp.split(',')
+                                        data = []
+
+                                        for item in temp:
+                                            data.append(float(item))
+                                        print data
+
+                                        X.append(data)
+                                        y.append(result)
+                                        time.sleep(.2)
+                        else:
+                            stillReading = False
+
+                    trainingData.close()
+                    X = np.array(X)
+                    y = np.array(y)
+                    clf.fit(X, y)
+                    pickle.dump(clf, open(filename, 'wb'))
+                elif addLib == 'N' or addLib == 'n':
+                    clf = pickle.load(open(filename, 'rb'))
+
+
 
         elif choice == '2':
             print "Press enter to translate"
             print "Q to quit"
             translate = raw_input()
-            while translate != 'Q' or translate != 'q':
+            while translate != 'Q' and translate != 'q':
                 com.flushOutput()
                 com.flushInput()
                 com.write('y')
@@ -81,6 +150,7 @@ def main():
                 data = data.reshape(1, -1)
                 print clf.predict(data)
                 translate = raw_input()
+                print translate
         elif choice == '3':
             flag = False
             com.close()

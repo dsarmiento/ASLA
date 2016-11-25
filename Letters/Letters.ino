@@ -3,15 +3,24 @@
 
 #define M_PI 3.14159265359
 #define GAIN 0.985
-#define SENSORRATE 20
+#define SENSORRATE  20
 
 // Pin defines
-#define statusLED    13
-#define frontContact 8
-#define sideContact  9
+#define greenLED    13
+#define redLED       7
+#define yellowLED    6
+
+#define frontContact 5
+#define sideContact  4
+
+#define bigFinger A3
+#define indexFinger A2
+#define middleFinger A1
+#define ringFinger  A0
+#define pinkyFinger
 
 bool testing = false;
-LSM6DS3 handIMU(I2C_MODE, 0x6B);
+LSM6DS3 handIMU(I2C_MODE, 0x6A);
 long timer = 0;
 float pitch = 0, pitchBase = 0;
 float roll = 0, rollBase = 0;
@@ -21,14 +30,22 @@ float accelPitch, accelRoll, accelYaw;
 
 void setup()
 {
-    pinMode(statusLED, OUTPUT);
+    pinMode(greenLED, OUTPUT);
+    pinMode(redLED, OUTPUT);
+    pinMode(yellowLED, OUTPUT);
+    digitalWrite(greenLED, LOW);
+    digitalWrite(yellowLED, LOW);
+    digitalWrite(redLED, LOW);
     pinMode(frontContact, INPUT);
     pinMode(sideContact, INPUT);
     Serial.begin(115200);
 
     // Start handIMU
     if (handIMU.begin() != 0)
+    {
         Serial.println("Problem starting sensor");
+        digitalWrite(redLED, HIGH);
+    }
     delay(1000);
 
     calibrate();
@@ -64,7 +81,7 @@ void loop()
 
 void calibrate()
 {
-    digitalWrite(statusLED, HIGH);
+    digitalWrite(yellowLED, HIGH);
     for(int i = 0; i < 256; i++)
     {
         readValues();
@@ -73,7 +90,8 @@ void calibrate()
         yawBase   = GAIN * (yawBase   + gyroZ * 0.01) + (1 - GAIN) * accelYaw;
         delay(10);
     }
-    digitalWrite(statusLED, LOW);
+    digitalWrite(yellowLED, LOW);
+    digitalWrite(greenLED, HIGH);
 }
 
 void readValues()
