@@ -1,5 +1,5 @@
 import pyttsx
 
 engine = pyttsx.init()
-engine.say("Hello World")
+engine.say("h")
 engine.runAndWait()
